@@ -49,6 +49,7 @@ class SearchCampaignsApi
     public function __construct(Configuration $config = null)
     {
         $this->client = new Client([
+            'handler' => \App\Classes\MyMailchimp::getLogHandler(),
             'defaults' => [
                 'timeout' => 120.0
             ]
