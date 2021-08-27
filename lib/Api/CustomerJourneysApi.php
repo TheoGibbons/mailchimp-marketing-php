@@ -1,7 +1,7 @@
 <?php
 
 /**
- * SearchCampaignsApi
+ * CustomerJourneysApi
  * PHP version 5
  *
  * @category Class
@@ -41,7 +41,7 @@ use MailchimpMarketing\Configuration;
 use MailchimpMarketing\HeaderSelector;
 use MailchimpMarketing\ObjectSerializer;
 
-class SearchCampaignsApi
+class CustomerJourneysApi
 {
     protected $client;
     protected $config;
@@ -50,7 +50,6 @@ class SearchCampaignsApi
     public function __construct(Configuration $config = null)
     {
         $this->client = new Client([
-            'handler' => \App\Classes\MyMailchimp::getLogHandler(),
             'defaults' => [
                 'timeout' => 120.0
             ]
@@ -64,15 +63,15 @@ class SearchCampaignsApi
         return $this->config;
     }
 
-    public function search($query, $fields = null, $exclude_fields = null)
+    public function trigger($journey_id, $step_id, $body)
     {
-        $response = $this->searchWithHttpInfo($query, $fields, $exclude_fields);
+        $response = $this->triggerWithHttpInfo($journey_id, $step_id, $body);
         return $response;
     }
 
-    public function searchWithHttpInfo($query, $fields = null, $exclude_fields = null)
+    public function triggerWithHttpInfo($journey_id, $step_id, $body)
     {
-        $request = $this->searchRequest($query, $fields, $exclude_fields);
+        $request = $this->triggerRequest($journey_id, $step_id, $body);
 
         try {
             $options = $this->createHttpClientOption();
@@ -108,43 +107,56 @@ class SearchCampaignsApi
         }
     }
 
-    protected function searchRequest($query, $fields = null, $exclude_fields = null)
+    protected function triggerRequest($journey_id, $step_id, $body)
     {
-        // verify the required parameter 'query' is set
-        if ($query === null || (is_array($query) && count($query) === 0)) {
+        // verify the required parameter 'journey_id' is set
+        if ($journey_id === null || (is_array($journey_id) && count($journey_id) === 0)) {
             throw new \InvalidArgumentException(
-                'Missing the required parameter $query when calling '
+                'Missing the required parameter $journey_id when calling '
+            );
+        }
+        // verify the required parameter 'step_id' is set
+        if ($step_id === null || (is_array($step_id) && count($step_id) === 0)) {
+            throw new \InvalidArgumentException(
+                'Missing the required parameter $step_id when calling '
+            );
+        }
+        // verify the required parameter 'body' is set
+        if ($body === null || (is_array($body) && count($body) === 0)) {
+            throw new \InvalidArgumentException(
+                'Missing the required parameter $body when calling '
             );
         }
 
-        $resourcePath = '/search-campaigns';
+        $resourcePath = '/customer-journeys/journeys/{journey_id}/steps/{step_id}/actions/trigger';
         $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
         $multipart = false;
-        // query params
-        if (is_array($fields)) {
-            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
-        } else
-        if ($fields !== null) {
-            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
-        }
-        // query params
-        if (is_array($exclude_fields)) {
-            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
-        } else
-        if ($exclude_fields !== null) {
-            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
-        }
-        // query params
-        if ($query !== null) {
-            $queryParams['query'] = ObjectSerializer::toQueryValue($query);
-        }
 
+        // path params
+        if ($journey_id !== null) {
+            $resourcePath = str_replace(
+                '{' . 'journey_id' . '}',
+                ObjectSerializer::toPathValue($journey_id),
+                $resourcePath
+            );
+        }
+        // path params
+        if ($step_id !== null) {
+            $resourcePath = str_replace(
+                '{' . 'step_id' . '}',
+                ObjectSerializer::toPathValue($step_id),
+                $resourcePath
+            );
+        }
 
         // body params
         $_tempBody = null;
+        if (isset($body)) {
+            $_tempBody = $body;
+        }
 
         if ($multipart) {
             $headers = $this->headerSelector->selectHeadersForMultipart(
@@ -212,7 +224,7 @@ class SearchCampaignsApi
 
         $query = Query::build($queryParams);
         return new Request(
-            'GET',
+            'POST',
             $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
             $headers,
             $httpBody
