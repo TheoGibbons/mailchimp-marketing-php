@@ -1,7 +1,7 @@
 <?php
 
 /**
- * CustomerJourneysApi
+ * AccountExportApi
  * PHP version 5
  *
  * @category Class
@@ -41,7 +41,7 @@ use MailchimpMarketing\Configuration;
 use MailchimpMarketing\HeaderSelector;
 use MailchimpMarketing\ObjectSerializer;
 
-class CustomerJourneysApi
+class AccountExportApi
 {
     protected $client;
     protected $config;
@@ -63,15 +63,15 @@ class CustomerJourneysApi
         return $this->config;
     }
 
-    public function trigger($journey_id, $step_id, $body)
+    public function getAccountExports($export_id, $fields = null, $exclude_fields = null)
     {
-        $response = $this->triggerWithHttpInfo($journey_id, $step_id, $body);
+        $response = $this->getAccountExportsWithHttpInfo($export_id, $fields, $exclude_fields);
         return $response;
     }
 
-    public function triggerWithHttpInfo($journey_id, $step_id, $body)
+    public function getAccountExportsWithHttpInfo($export_id, $fields = null, $exclude_fields = null)
     {
-        $request = $this->triggerRequest($journey_id, $step_id, $body);
+        $request = $this->getAccountExportsRequest($export_id, $fields, $exclude_fields);
 
         try {
             $options = $this->createHttpClientOption();
@@ -107,56 +107,47 @@ class CustomerJourneysApi
         }
     }
 
-    protected function triggerRequest($journey_id, $step_id, $body)
+    protected function getAccountExportsRequest($export_id, $fields = null, $exclude_fields = null)
     {
-        // verify the required parameter 'journey_id' is set
-        if ($journey_id === null || (is_array($journey_id) && count($journey_id) === 0)) {
+        // verify the required parameter 'export_id' is set
+        if ($export_id === null || (is_array($export_id) && count($export_id) === 0)) {
             throw new \InvalidArgumentException(
-                'Missing the required parameter $journey_id when calling '
-            );
-        }
-        // verify the required parameter 'step_id' is set
-        if ($step_id === null || (is_array($step_id) && count($step_id) === 0)) {
-            throw new \InvalidArgumentException(
-                'Missing the required parameter $step_id when calling '
-            );
-        }
-        // verify the required parameter 'body' is set
-        if ($body === null || (is_array($body) && count($body) === 0)) {
-            throw new \InvalidArgumentException(
-                'Missing the required parameter $body when calling '
+                'Missing the required parameter $export_id when calling '
             );
         }
 
-        $resourcePath = '/customer-journeys/journeys/{journey_id}/steps/{step_id}/actions/trigger';
+        $resourcePath = '/account-exports/{export_id}';
         $formParams = [];
         $queryParams = [];
         $headerParams = [];
         $httpBody = '';
         $multipart = false;
+        // query params
+        if (is_array($fields)) {
+            $queryParams['fields'] = ObjectSerializer::serializeCollection($fields, 'csv');
+        } else
+        if ($fields !== null) {
+            $queryParams['fields'] = ObjectSerializer::toQueryValue($fields);
+        }
+        // query params
+        if (is_array($exclude_fields)) {
+            $queryParams['exclude_fields'] = ObjectSerializer::serializeCollection($exclude_fields, 'csv');
+        } else
+        if ($exclude_fields !== null) {
+            $queryParams['exclude_fields'] = ObjectSerializer::toQueryValue($exclude_fields);
+        }
 
         // path params
-        if ($journey_id !== null) {
+        if ($export_id !== null) {
             $resourcePath = str_replace(
-                '{' . 'journey_id' . '}',
-                ObjectSerializer::toPathValue($journey_id),
-                $resourcePath
-            );
-        }
-        // path params
-        if ($step_id !== null) {
-            $resourcePath = str_replace(
-                '{' . 'step_id' . '}',
-                ObjectSerializer::toPathValue($step_id),
+                '{' . 'export_id' . '}',
+                ObjectSerializer::toPathValue($export_id),
                 $resourcePath
             );
         }
 
         // body params
         $_tempBody = null;
-        if (isset($body)) {
-            $_tempBody = $body;
-        }
 
         if ($multipart) {
             $headers = $this->headerSelector->selectHeadersForMultipart(
@@ -224,7 +215,7 @@ class CustomerJourneysApi
 
         $query = Query::build($queryParams);
         return new Request(
-            'POST',
+            'GET',
             $this->config->getHost() . $resourcePath . ($query ? "?{$query}" : ''),
             $headers,
             $httpBody
